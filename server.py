@@ -88,7 +88,7 @@ def isAtWork(userLoc):
 	wlon = 77.0658416
 	dis = distance(wlat, wlon, userLoc.lat, userLoc.lon)
 	print dis
-	if abs(dis) < 300:
+	if abs(dis) < 1000:
 		return True
 	return False
 
