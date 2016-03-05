@@ -55,7 +55,7 @@ def initiateMeeting(groupId):
 		print userLoc
 		groupIdToUserLocationMap[groupId][user.gcmToken] = userLoc
 	print groupIdToUserLocationMap
-	t = Timer(15.0, sendMemberStatusToFlock,[groupId])
+	t = Timer(30.0, sendMemberStatusToFlock,[groupId])
 	t.start() # after 30 seconds, "hello, world" will be printed
 
 import math
