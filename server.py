@@ -146,7 +146,7 @@ def getFlockResponse(message):
 
 def sendToFlock(message, webhookUrl):
 	data = {
-		"text": messagePrefix + message
+		"text": message
 	}
 
 	req = urllib2.Request(webhookUrl)
