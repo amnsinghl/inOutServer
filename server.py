@@ -158,9 +158,12 @@ def sendToGcm(users):
 	for user in users:
 		gcmTokenList.append(user.gcmToken)
 
-	req = urllib2.Request("http://www.dhiwal.com:9003/sendMessage")   #gcm server url
+	data = {
+		"registrationId" : gcmTokenList
+	}
+	req = urllib2.Request("http://www.dhiwal.com:9003/sendToDevices")   #gcm server url
 	req.add_header('Content-Type', 'application/json')
-	response = urllib2.urlopen(req, json.dumps(gcmTokenList))
+	response = urllib2.urlopen(req, json.dumps(data))
 
 @app.after_request
 def apply_headers(response):
