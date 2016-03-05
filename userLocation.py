@@ -2,6 +2,7 @@ class UserLocation(object):
 	gcmToken = ""
 	lat = 0.0
 	lon = 0.0
+	locationSet = False
 	
 	def __init__(self, gcmToken):
 		self.gcmToken = gcmToken

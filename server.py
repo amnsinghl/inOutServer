@@ -2,6 +2,7 @@ from flask import *
 import json
 import urllib2
 from random import randint
+from threading import Timer
 from user import User
 from group import Group
 from userLocation import UserLocation
@@ -38,6 +39,7 @@ def sendLocation():
 		if gcmToken in users:
 			users[gcmToken].lat = latitude
 			users[gcmToken].lon = longitude
+			users[gcmToken].locationSet = True
 	print groupIdToUserLocationMap
 	return "OK"
 
@@ -45,7 +47,7 @@ def initiateMeeting(groupId):
 	if groupId in groupIdToUserLocationMap:
 		return
 	users = groupToUserListMap[groupId]
-	# sendToGcm(users)
+	sendToGcm(users)
 	groupIdToUserLocationMap[groupId] = {}
 	for user in users:
 		print user
@@ -53,6 +55,69 @@ def initiateMeeting(groupId):
 		print userLoc
 		groupIdToUserLocationMap[groupId][user.gcmToken] = userLoc
 	print groupIdToUserLocationMap
+	t = Timer(15.0, sendMemberStatusToFlock,[groupId])
+	t.start() # after 30 seconds, "hello, world" will be printed
+
+import math
+ 
+def distance(lat1, long1, lat2, long2):
+    # Convert latitude and longitude to 
+    # spherical coordinates in radians.
+    degrees_to_radians = math.pi/180.0
+    # phi = 90 - latitude
+    phi1 = (90.0 - lat1)*degrees_to_radians
+    phi2 = (90.0 - lat2)*degrees_to_radians
+    # theta = longitude
+    theta1 = long1*degrees_to_radians
+    theta2 = long2*degrees_to_radians
+    # Compute spherical distance from spherical coordinates.
+    # For two locations in spherical coordinates 
+    # (1, theta, phi) and (1, theta', phi')
+    # cosine( arc length ) = 
+    #    sin phi sin phi' cos(theta-theta') + cos phi cos phi'
+    # distance = rho * arc length
+    cos = (math.sin(phi1)*math.sin(phi2)*math.cos(theta1 - theta2) + 
+           math.cos(phi1)*math.cos(phi2))
+    arc = math.acos( cos )
+    # Remember to multiply arc by the radius of the earth 
+    # in your favorite set of units to get length.
+    return arc * 6371000
+
+def isAtWork(userLoc):
+	wlat = 28.4567591
+	wlon = 77.0658416
+	dis = distance(wlat, wlon, userLoc.lat, userLoc.lon)
+	print dis
+	if abs(dis) < 300:
+		return True
+	return False
+
+def sendMemberStatusToFlock(groupId):
+	avail = []
+	unavail = []
+	cantsay = []
+	userLocMap = groupIdToUserLocationMap[groupId]
+	for token in userLocMap:
+		username = tokenToUserMap[token].username
+		if userLocMap[token].locationSet:
+			if isAtWork(userLocMap[token]):
+				avail.append(username)
+			else:
+				unavail.append(username)
+		else:
+			cantsay.append(username)
+	groupIdToUserLocationMap.pop(groupId)
+	ret = "Available: "
+	for st in avail:
+		ret += st + ", "
+	ret += "\nUnavailable: "
+	for st in unavail:
+		ret += st + ", "
+	ret += "\nCan't say: "
+	for st in cantsay:
+		ret += st + ", "
+	print ret
+	sendToFlock(ret, tokenToGroupMap[groupId].webhookUrl)
 
 @app.route('/flockToServer',methods=['POST'])
 def flockToUs():
@@ -79,14 +144,14 @@ def getFlockResponse(message):
 	print postData
 	return postData
 
-# def sendToFlock(message, convData):
-# 	data = {
-# 		"text": messagePrefix + message
-# 	}
+def sendToFlock(message, webhookUrl):
+	data = {
+		"text": messagePrefix + message
+	}
 
-# 	req = urllib2.Request(convData.assignedPerson.webhookUrl)
-# 	req.add_header('Content-Type', 'application/json')
-# 	response = urllib2.urlopen(req, json.dumps(data))
+	req = urllib2.Request(webhookUrl)
+	req.add_header('Content-Type', 'application/json')
+	response = urllib2.urlopen(req, json.dumps(data))
 
 def sendToGcm(users):
 	gcmTokenList = []
@@ -105,19 +170,5 @@ def apply_headers(response):
 
 if __name__ == '__main__':
 	app.run(host= '0.0.0.0', port=8090, debug=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

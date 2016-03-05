@@ -1,10 +1,10 @@
 class Group(object):
 	token = ""
-	webhook = ""
+	webhookUrl = ""
 	
-	def __init__(self, token ,webhook):
+	def __init__(self, token ,webhookUrl):
 		self.token = token
-		self.webhook = webhook
+		self.webhookUrl = webhookUrl
 
 	def __repr__(self):
-		return "token: " + self.token + "," + " webhook: " + self.webhook;
+		return "token: " + self.token + "," + " webhook: " + self.webhookUrl;
