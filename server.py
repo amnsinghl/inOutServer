@@ -31,8 +31,8 @@ def registerApp():
 def sendLocation():
 	data = json.loads(request.data)
 	print data
-	latitude = data['latitude']
-	longitude = data['longitude']
+	latitude = float(data['latitude'])
+	longitude = float(data['longitude'])
 	gcmToken = data['gcmToken']
 	for groupId in groupIdToUserLocationMap:
 		users = groupIdToUserLocationMap[groupId]
